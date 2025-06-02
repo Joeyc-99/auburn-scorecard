@@ -190,6 +190,18 @@
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
+    function handleEnter(event, player, hole) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    const nextPlayer = player < playerCount ? player + 1 : 1; // loop back to Player 1 if at end
+    const nextInput = document.querySelector(`input[name="p${nextPlayer}_h${hole}"]`);
+    if (nextInput) {
+      nextInput.focus();
+    }
+    return false;
+  }
+}
+
   </script>
 </body>
 </html>
