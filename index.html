@@ -135,8 +135,13 @@
 
     for (let p = 1; p <= playerCount; p++) {
       const row = document.createElement('tr');
-      row.innerHTML = `<th><input class="player-name" type="text" name="player${p}_name" placeholder="Player ${p}"></th>` +
-        Array.from({ length: 18 }, (_, i) => `<td><input type="number" name="p${p}_h${i+1}" min="1"></td>`).join('') +
+     row.innerHTML = `<th><input class="player-name" type="text" name="player${p}_name" placeholder="Player ${p}"></th>` +
+  Array.from({ length: 18 }, (_, i) => {
+    const hole = i + 1;
+    return `<td><input type="number" name="p${p}_h${hole}" min="1" 
+      onkeydown="return handleEnter(event, ${p}, ${hole})"></td>`;
+  }).join('') +
+
         `<td class="total" id="p${p}_out">0</td><td class="total" id="p${p}_in">0</td><td class="total" id="p${p}_total">0</td>`;
       playerRows.appendChild(row);
     }
