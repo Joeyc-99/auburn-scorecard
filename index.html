@@ -8,7 +8,7 @@
     body {
       font-family: sans-serif;
       padding: 1rem;
-      max-width: 900px;
+      max-width: 1000px;
       margin: auto;
     }
     h1, h2 {
@@ -18,10 +18,11 @@
       width: 100%;
       border-collapse: collapse;
       margin-top: 1rem;
+      font-size: 0.9rem;
     }
     .scorecard th, .scorecard td {
       border: 1px solid #999;
-      padding: 0.5rem;
+      padding: 0.4rem;
       text-align: center;
     }
     .tee-selector {
@@ -34,11 +35,12 @@
     }
     button {
       margin-top: 1rem;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
+      display: inline-block;
       padding: 0.5rem 1rem;
       cursor: pointer;
+    }
+    .btn-group {
+      text-align: center;
     }
   </style>
 </head>
@@ -47,6 +49,7 @@
   <h2>Digital Scorecard</h2>
 
   <div class="tee-selector">
+    <strong>Select Tee: </strong>
     <label><input type="radio" name="tee" value="blue" checked> Blue</label>
     <label><input type="radio" name="tee" value="white"> White</label>
     <label><input type="radio" name="tee" value="gold"> Gold</label>
@@ -58,14 +61,34 @@
         <tr>
           <th>Hole</th>
           <td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td>
+          <td>Out</td>
           <td>10</td><td>11</td><td>12</td><td>13</td><td>14</td><td>15</td><td>16</td><td>17</td><td>18</td>
+          <td>In</td>
           <td>Total</td>
         </tr>
         <tr>
           <th>Par</th>
           <td>4</td><td>4</td><td>5</td><td>3</td><td>4</td><td>5</td><td>4</td><td>3</td><td>4</td>
+          <td class="total">36</td>
           <td>5</td><td>3</td><td>4</td><td>4</td><td>3</td><td>4</td><td>4</td><td>4</td><td>5</td>
-          <td>72</td>
+          <td class="total">36</td>
+          <td class="total">72</td>
+        </tr>
+        <tr>
+          <th>HCP (Men)</th>
+          <td>3</td><td>5</td><td>1</td><td>17</td><td>13</td><td>7</td><td>15</td><td>11</td><td>9</td>
+          <td></td>
+          <td>8</td><td>18</td><td>12</td><td>4</td><td>14</td><td>2</td><td>10</td><td>16</td><td>6</td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr id="yardageRow">
+          <th>Yardage</th>
+          <td id="y1"></td><td id="y2"></td><td id="y3"></td><td id="y4"></td><td id="y5"></td><td id="y6"></td><td id="y7"></td><td id="y8"></td><td id="y9"></td>
+          <td class="total" id="yOut"></td>
+          <td id="y10"></td><td id="y11"></td><td id="y12"></td><td id="y13"></td><td id="y14"></td><td id="y15"></td><td id="y16"></td><td id="y17"></td><td id="y18"></td>
+          <td class="total" id="yIn"></td>
+          <td class="total" id="yTotal"></td>
         </tr>
       </thead>
       <tbody>
@@ -80,6 +103,7 @@
           <td><input type="number" name="h7" min="1"></td>
           <td><input type="number" name="h8" min="1"></td>
           <td><input type="number" name="h9" min="1"></td>
+          <td class="total" id="outScore">0</td>
           <td><input type="number" name="h10" min="1"></td>
           <td><input type="number" name="h11" min="1"></td>
           <td><input type="number" name="h12" min="1"></td>
@@ -89,23 +113,76 @@
           <td><input type="number" name="h16" min="1"></td>
           <td><input type="number" name="h17" min="1"></td>
           <td><input type="number" name="h18" min="1"></td>
-          <td class="total" id="total">0</td>
+          <td class="total" id="inScore">0</td>
+          <td class="total" id="totalScore">0</td>
         </tr>
       </tbody>
     </table>
-    <button type="button" onclick="calculateTotal()">Calculate Total</button>
+    <div class="btn-group">
+      <button type="button" onclick="calculateTotals()">Calculate Totals</button>
+      <button type="button" onclick="downloadCSV()">Download CSV</button>
+    </div>
   </form>
 
   <script>
-    function calculateTotal() {
-      const form = document.getElementById('scoreForm');
-      const inputs = form.querySelectorAll('input[type=number]');
-      let total = 0;
-      inputs.forEach(input => {
-        const val = parseInt(input.value, 10);
-        if (!isNaN(val)) total += val;
+    const yardages = {
+      blue: [380,393,535,176,405,509,383,195,404,  532,144,377,398,180,354,358,197,373],
+      white:[368,380,512,155,397,491,375,186,380,  517,137,353,379,172,338,340,188,365],
+      gold: [233,370,441,114,374,441,309,119,303,  449,127,322,352,161,312,305,140,273]
+    };
+
+    const teeRadios = document.querySelectorAll('input[name="tee"]');
+
+    function updateYardages() {
+      const selected = document.querySelector('input[name="tee"]:checked').value;
+      const yards = yardages[selected];
+      let out=0, inn=0;
+      yards.forEach((y,i)=>{
+        const hole = i+1;
+        document.getElementById('y'+hole).innerText = y;
+        if(hole<=9) out += y; else inn += y;
       });
-      document.getElementById('total').innerText = total;
+      document.getElementById('yOut').innerText = out;
+      document.getElementById('yIn').innerText = inn;
+      document.getElementById('yTotal').innerText = out+inn;
+    }
+
+    teeRadios.forEach(r=>r.addEventListener('change',updateYardages));
+    updateYardages(); // initial
+
+    function calculateTotals() {
+      const inputs = document.querySelectorAll('input[type="number"]');
+      let out=0, inn=0;
+      inputs.forEach((input, idx)=>{
+        const val = parseInt(input.value,10);
+        if(!isNaN(val)) {
+          if(idx<9) out += val; else inn += val;
+        }
+      });
+      document.getElementById('outScore').innerText = out;
+      document.getElementById('inScore').innerText = inn;
+      document.getElementById('totalScore').innerText = out+inn;
+    }
+
+    function downloadCSV() {
+      calculateTotals();
+      const tee = document.querySelector('input[name="tee"]:checked').value;
+      const headers = ['Hole', ...Array.from({length:18}, (_,i)=>i+1), 'Out', 'In', 'Total'];
+      const scoreCells = [...document.querySelectorAll('input[type="number"]')].map(i=>i.value||'');
+      scoreCells.splice(9,0, document.getElementById('outScore').innerText);
+      scoreCells.push(document.getElementById('inScore').innerText);
+      scoreCells.push(document.getElementById('totalScore').innerText);
+      const rows = [headers, ['Score', ...scoreCells]];
+      const csvContent = rows.map(r=>r.join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href=url;
+      a.download=`auburn_scorecard_${tee}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
   </script>
 </body>
