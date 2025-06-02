@@ -42,31 +42,14 @@
     .btn-group {
       text-align: center;
     }
-    .course-info {
-  text-align: center;
-  margin-bottom: 1.5rem;
-  font-size: 0.95rem;
-}
-.course-info a {
-  color: #0077cc;
-  text-decoration: none;
-}
-.course-info a:hover {
-  text-decoration: underline;
-}
-
+    .player-name {
+      width: 100px;
+    }
   </style>
 </head>
 <body>
   <h1>Auburn Golf Course</h1>
   <h2>Digital Scorecard</h2>
-  <div class="course-info">
-  <p><strong>Address:</strong> 29630 Green River Rd SE, Auburn, WA 98092</p>
-  <p><strong>Phone:</strong> <a href="tel:+12538313500">(253) 831-3500</a></p>
-  <p><strong>Website:</strong> <a href="https://www.auburnwa.gov/city_hall/parks_arts_recreation/golf_course" target="_blank">auburnwa.gov/golf</a></p>
-  <p><strong>Email:</strong> <a href="mailto:golf@auburnwa.gov">golf@auburnwa.gov</a></p>
-</div>
-
 
   <div class="tee-selector">
     <strong>Select Tee: </strong>
@@ -111,31 +94,8 @@
           <td class="total" id="yTotal"></td>
         </tr>
       </thead>
-      <tbody>
-        <tr>
-          <th>Your Score</th>
-          <td><input type="number" name="h1" min="1"></td>
-          <td><input type="number" name="h2" min="1"></td>
-          <td><input type="number" name="h3" min="1"></td>
-          <td><input type="number" name="h4" min="1"></td>
-          <td><input type="number" name="h5" min="1"></td>
-          <td><input type="number" name="h6" min="1"></td>
-          <td><input type="number" name="h7" min="1"></td>
-          <td><input type="number" name="h8" min="1"></td>
-          <td><input type="number" name="h9" min="1"></td>
-          <td class="total" id="outScore">0</td>
-          <td><input type="number" name="h10" min="1"></td>
-          <td><input type="number" name="h11" min="1"></td>
-          <td><input type="number" name="h12" min="1"></td>
-          <td><input type="number" name="h13" min="1"></td>
-          <td><input type="number" name="h14" min="1"></td>
-          <td><input type="number" name="h15" min="1"></td>
-          <td><input type="number" name="h16" min="1"></td>
-          <td><input type="number" name="h17" min="1"></td>
-          <td><input type="number" name="h18" min="1"></td>
-          <td class="total" id="inScore">0</td>
-          <td class="total" id="totalScore">0</td>
-        </tr>
+      <tbody id="playerRows">
+        <!-- Player rows will be injected here -->
       </tbody>
     </table>
     <div class="btn-group">
@@ -170,29 +130,50 @@
     teeRadios.forEach(r=>r.addEventListener('change',updateYardages));
     updateYardages(); // initial
 
+    const playerRows = document.getElementById('playerRows');
+    const playerCount = 4;
+
+    for (let p = 1; p <= playerCount; p++) {
+      const row = document.createElement('tr');
+      row.innerHTML = `<th><input class="player-name" type="text" name="player${p}_name" placeholder="Player ${p}"></th>` +
+        Array.from({ length: 18 }, (_, i) => `<td><input type="number" name="p${p}_h${i+1}" min="1"></td>`).join('') +
+        `<td class="total" id="p${p}_out">0</td><td class="total" id="p${p}_in">0</td><td class="total" id="p${p}_total">0</td>`;
+      playerRows.appendChild(row);
+    }
+
     function calculateTotals() {
-      const inputs = document.querySelectorAll('input[type="number"]');
-      let out=0, inn=0;
-      inputs.forEach((input, idx)=>{
-        const val = parseInt(input.value,10);
-        if(!isNaN(val)) {
-          if(idx<9) out += val; else inn += val;
+      for (let p = 1; p <= playerCount; p++) {
+        let out=0, inn=0;
+        for (let i = 1; i <= 18; i++) {
+          const input = document.querySelector(`input[name="p${p}_h${i}"]`);
+          const val = parseInt(input.value, 10);
+          if (!isNaN(val)) {
+            if (i <= 9) out += val;
+            else inn += val;
+          }
         }
-      });
-      document.getElementById('outScore').innerText = out;
-      document.getElementById('inScore').innerText = inn;
-      document.getElementById('totalScore').innerText = out+inn;
+        document.getElementById(`p${p}_out`).innerText = out;
+        document.getElementById(`p${p}_in`).innerText = inn;
+        document.getElementById(`p${p}_total`).innerText = out + inn;
+      }
     }
 
     function downloadCSV() {
       calculateTotals();
       const tee = document.querySelector('input[name="tee"]:checked').value;
-      const headers = ['Hole', ...Array.from({length:18}, (_,i)=>i+1), 'Out', 'In', 'Total'];
-      const scoreCells = [...document.querySelectorAll('input[type="number"]')].map(i=>i.value||'');
-      scoreCells.splice(9,0, document.getElementById('outScore').innerText);
-      scoreCells.push(document.getElementById('inScore').innerText);
-      scoreCells.push(document.getElementById('totalScore').innerText);
-      const rows = [headers, ['Score', ...scoreCells]];
+      const headers = ['Player', ...Array.from({length:18}, (_,i)=>i+1), 'Out', 'In', 'Total'];
+      const rows = [headers];
+      for (let p = 1; p <= playerCount; p++) {
+        const name = document.querySelector(`input[name="player${p}_name"]`).value || `Player ${p}`;
+        const inputs = Array.from({ length: 18 }, (_, i) => {
+          const val = document.querySelector(`input[name="p${p}_h${i+1}"]`).value;
+          return val || '';
+        });
+        const out = document.getElementById(`p${p}_out`).innerText;
+        const inn = document.getElementById(`p${p}_in`).innerText;
+        const total = document.getElementById(`p${p}_total`).innerText;
+        rows.push([name, ...inputs, out, inn, total]);
+      }
       const csvContent = rows.map(r=>r.join(',')).join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv'});
       const url = URL.createObjectURL(blob);
