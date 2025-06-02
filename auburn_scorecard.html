@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auburn Golf Course Scorecard</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 1rem;
+      max-width: 900px;
+      margin: auto;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .scorecard {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    .scorecard th, .scorecard td {
+      border: 1px solid #999;
+      padding: 0.5rem;
+      text-align: center;
+    }
+    .tee-selector {
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .total {
+      font-weight: bold;
+      background-color: #f0f0f0;
+    }
+    button {
+      margin-top: 1rem;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Auburn Golf Course</h1>
+  <h2>Digital Scorecard</h2>
+
+  <div class="tee-selector">
+    <label><input type="radio" name="tee" value="blue" checked> Blue</label>
+    <label><input type="radio" name="tee" value="white"> White</label>
+    <label><input type="radio" name="tee" value="gold"> Gold</label>
+  </div>
+
+  <form id="scoreForm">
+    <table class="scorecard">
+      <thead>
+        <tr>
+          <th>Hole</th>
+          <th colspan="9">Front 9</th>
+          <th colspan="9">Back 9</th>
+          <th>Total</th>
+        </tr>
+        <tr>
+          <th></th>
+          <td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td>
+          <td>10</td><td>11</td><td>12</td><td>13</td><td>14</td><td>15</td><td>16</td><td>17</td><td>18</td>
+          <td>⇨</td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Your Score</th>
+          <td><input type="number" name="h1" min="1"></td>
+          <td><input type="number" name="h2" min="1"></td>
+          <td><input type="number" name="h3" min="1"></td>
+          <td><input type="number" name="h4" min="1"></td>
+          <td><input type="number" name="h5" min="1"></td>
+          <td><input type="number" name="h6" min="1"></td>
+          <td><input type="number" name="h7" min="1"></td>
+          <td><input type="number" name="h8" min="1"></td>
+          <td><input type="number" name="h9" min="1"></td>
+          <td><input type="number" name="h10" min="1"></td>
+          <td><input type="number" name="h11" min="1"></td>
+          <td><input type="number" name="h12" min="1"></td>
+          <td><input type="number" name="h13" min="1"></td>
+          <td><input type="number" name="h14" min="1"></td>
+          <td><input type="number" name="h15" min="1"></td>
+          <td><input type="number" name="h16" min="1"></td>
+          <td><input type="number" name="h17" min="1"></td>
+          <td><input type="number" name="h18" min="1"></td>
+          <td class="total" id="total">0</td>
+        </tr>
+      </tbody>
+    </table>
+    <button type="button" onclick="calculateTotal()">Calculate Total</button>
+  </form>
+
+  <script>
+    function calculateTotal() {
+      const form = document.getElementById('scoreForm');
+      const inputs = form.querySelectorAll('input[type=number]');
+      let total = 0;
+      inputs.forEach(input => {
+        const val = parseInt(input.value, 10);
+        if (!isNaN(val)) total += val;
+      });
+      document.getElementById('total').innerText = total;
+    }
+  </script>
+</body>
+</html>
